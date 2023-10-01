@@ -1,0 +1,56 @@
+73e850de-b723-43b1-91ad-5ce2f69ed361
+
+Jenkins Pipeline 
+
+pipeline{
+    agent none
+    environment {
+        DOCKERHUB_CREDENTIALS=credentials('73e850de-b723-43b1-91ad-5ce2f69ed361')
+    }
+    stages{
+        stage('Hello'){
+            agent{ 
+                label 'k8s-master'
+            }
+            steps{
+                echo 'Hello World'
+            }
+        }
+       
+        stage('git'){
+            agent{ 
+                label 'k8s-master'
+            }
+
+            steps{
+
+                git'https://github.com/Virendra11234/website.git'
+            }
+        }
+        stage('docker') {
+            agent { 
+                label 'k8s-master'
+            }
+
+            steps {
+
+                sh 'sudo docker build /home/ubuntu/jenkins/workspace/pipeline -t openstack123/project2'
+                sh 'sudo echo $DOCKERHUB_CREDENTIALS_PSW | sudo docker login -u $DOCKERHUB_CREDENTIALS_USR --password-stdin'
+                sh 'sudo docker push openstack123/project2'
+
+            }
+        }
+         stage('Kuberneets') {
+            agent { 
+                label 'k8s-master'
+            }
+
+            steps {
+
+                sh ' kubectl create -f deploy.yml'
+                sh ' kubectl create -f svc.yml'
+            }
+        }
+
+    }
+}
